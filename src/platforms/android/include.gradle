@@ -1,0 +1,3 @@
+dependencies {
+    implementation "me.pushy:sdk:1.0.43"
+}

@@ -1,0 +1,13 @@
+platform :ios, '9.0'
+
+pod 'Pushy', '1.0.14'
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    if target.name == 'Pushy'
+      target.build_configurations.each do |config|
+        config.build_settings['SWIFT_VERSION'] = '4.2'
+      end
+    end
+  end
+end

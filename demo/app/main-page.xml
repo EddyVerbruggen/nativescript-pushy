@@ -1,0 +1,6 @@
+<Page xmlns="http://schemas.nativescript.org/tns.xsd" loaded="pageLoaded" class="page">
+  <StackLayout class="p-30">
+    <Button text="get push token" tap="{{ doGetDevicePushToken }}" class="button" />
+    <Label text="{{ message }}" class="m-t-15 t-20 text-center c-black" textWrap="true"/>
+  </StackLayout>
+</Page>
