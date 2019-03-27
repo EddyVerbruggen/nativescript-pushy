@@ -29,8 +29,31 @@ npm i
 npm run demo.ios # or demo.android
 ```
 
+## Setup (iOS only)
+Create a file called either `app.entitlements` or `<YourAppName>.entitlements` (where `YourAppName` is identical to the folder name of `platforms/ios/YourAppName`). [Here's an example](https://github.com/EddyVerbruggen/nativescript-pushy/blob/master/demo/app/App_Resources/iOS/app.entitlements).
+
+Now reference that file from `build.xcconfig` [as shown here](https://github.com/EddyVerbruggen/nativescript-pushy/blob/master/demo/app/App_Resources/iOS/build.xcconfig).
+
 ## API
 
 ### `getDevicePushToken`
+```typescript
+import { getDevicePushToken } from "nativescript-pushy";
+
+getDevicePushToken()
+    .then(token => console.log(`getDevicePushToken success, token: ${token}`))
+    .catch(err => console.log(`getDevicePushToken error: ${err}`));
+```
 
 ### `setNotificationHandler`
+```typescript
+import { setNotificationHandler } from "nativescript-pushy";
+
+setNotificationHandler(notification => {
+  console.log(`Notification received: ${JSON.stringify(notification)}`);
+});
+```
+
+## Please note..
+
+> ⚠️ Do not test on a the iOS simulator as it can't receive the token not actual push notifications.

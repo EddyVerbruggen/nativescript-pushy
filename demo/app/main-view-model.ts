@@ -9,7 +9,8 @@ export class HelloWorldModel extends Observable {
     super();
 
     setNotificationHandler(notification => {
-      console.log("Notification received: " + JSON.stringify(notification));
+      console.log(`Notification received: ${JSON.stringify(notification)}`);
+
       setTimeout(() => {
         alert({
           title: "Notification received",
@@ -23,7 +24,7 @@ export class HelloWorldModel extends Observable {
   public doGetDevicePushToken(): void {
     getDevicePushToken()
         .then(token => {
-          console.log("register success, token: " + token);
+          console.log(`getDevicePushToken success, token: ${token}`);
           this.set("message", "token: " + token);
         })
         .catch(err => this.set("message", err));
