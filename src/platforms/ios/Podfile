@@ -1,6 +1,6 @@
 platform :ios, '9.0'
 
-pod 'Pushy', '1.0.14'
+pod 'Pushy', :git => 'https://github.com/EddyVerbruggen/pushy-sdk-ios.git', :commit => '7f9c3ec5fe65704ad6feb794118130e0f2a53fbd'
 
 post_install do |installer|
   installer.pods_project.targets.each do |target|
