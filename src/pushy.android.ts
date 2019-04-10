@@ -126,7 +126,8 @@ class PushyPushReceiver extends android.content.BroadcastReceiver {
     // Get an instance of the NotificationManager service
     const notificationManager = <android.app.NotificationManager>context.getSystemService(android.content.Context.NOTIFICATION_SERVICE);
 
-    // Build the notification and display it
-    notificationManager.notify(1, builder.build());
+    // Build the notification and display it (by making the ID unique we can show more than 1 notification in the tray)
+    const notID = Math.floor((Math.random() * 1000) + 1);
+    notificationManager.notify(notID, builder.build());
   }
 }
