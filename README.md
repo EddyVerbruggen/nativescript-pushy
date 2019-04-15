@@ -47,6 +47,10 @@ getDevicePushToken()
 ```
 
 ### `setNotificationHandler`
+Since plugin version 1.1.0 the *entire* payload of the notification is copied to the object this handler receives,
+but note that it all gets copied into a `data` object. So if you send for instance `{"foo": "bar"}`,
+you can find the value `"bar"` at `notification.data.foo`. 
+
 ```typescript
 import { setNotificationHandler } from "nativescript-pushy";
 

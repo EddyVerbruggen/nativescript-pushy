@@ -6,6 +6,7 @@ export interface TNSPushNotification {
     badge: number;
     sound: string;
   };
+  data?: {};
   /**
    * NSDictionary<any, any>
    */

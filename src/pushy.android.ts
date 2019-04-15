@@ -89,9 +89,21 @@ class PushyPushReceiver extends android.content.BroadcastReceiver {
       if (intent.getExtras() == null) {
         return;
       }
+
+      const extras = intent.getExtras();
+
       notification.title = intent.getStringExtra("title");
       notification.message = intent.getStringExtra("message");
-      notification.android = intent.getExtras();
+      notification.android = extras;
+      notification.data = {};
+
+      const iterator = extras.keySet().iterator();
+      while (iterator.hasNext()) {
+        const key = iterator.next();
+        if (key !== "from" && key !== "collapse_key") {
+          notification.data[key] = extras.get(key);
+        }
+      }
 
       pendingNotifications.push(notification);
       processPendingNotifications();

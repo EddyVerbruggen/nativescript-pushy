@@ -1,4 +1,5 @@
 import * as application from "tns-core-modules/application/application";
+import { getClass } from "tns-core-modules/utils/types";
 import { TNSPushNotification } from "./";
 
 let notificationHandler: (notification: TNSPushNotification) => void;
@@ -35,33 +36,42 @@ const wireNotificationHandler = () => {
       if (getDevicePushTokenReject) {
         getDevicePushTokenReject(error.localizedDescription);
         getDevicePushTokenReject = undefined;
-      } else {
-        latestDevicePushTokenError = error.localizedDescription;
       }
+      latestDevicePushTokenError = error.localizedDescription;
       latestDevicePushToken = undefined;
     } else {
       if (getDevicePushTokenResolve) {
         getDevicePushTokenResolve(deviceToken);
         getDevicePushTokenResolve = undefined;
-      } else {
-        latestDevicePushToken = deviceToken;
       }
+      latestDevicePushToken = deviceToken;
       latestDevicePushTokenError = undefined;
     }
   });
 
   pushy.setNotificationHandler((data: NSDictionary<any, any>, completionHandler: (backgroundFetchResult: UIBackgroundFetchResult) => void) => {
-    const aps: NSDictionary<any, any> = data.objectForKey("aps");
+    const d = toJsObject(data);
+
     const notification = <TNSPushNotification>{
-      title: data.objectForKey("title"),
-      message: data.objectForKey("message"),
-      aps: {
-        alert: aps.objectForKey("alert"),
-        badge: aps.objectForKey("badge"),
-        sound: aps.objectForKey("sound")
-      },
-      ios: data
+      title: d.title,
+      message: d.message,
+      ios: data,
+      data: {}
     };
+
+    if (d.aps) {
+      notification.aps = {
+        alert: d.aps.alert,
+        badge: d.aps.badge,
+        sound: d.aps.sound
+      };
+    }
+
+    Object.keys(d).forEach(key => {
+      if (key !== "aps" && key !== "title" && key !== "message") {
+        notification.data[key] = d[key];
+      }
+    });
 
     pendingNotifications.push(notification);
     processPendingNotifications();
@@ -73,6 +83,51 @@ if (UIApplication.sharedApplication) {
   wireNotificationHandler();
 } else {
   application.on("launch", () => wireNotificationHandler());
+}
+
+function toJsObject(dictionary: NSDictionary<any, any>) {
+  if (dictionary === null || typeof dictionary !== "object") {
+    return dictionary;
+  }
+  let node, key, i, l,
+      oKeyArr = dictionary.allKeys;
+
+   if (oKeyArr !== undefined) {
+    // object
+    node = {};
+    for (i = 0, l = oKeyArr.count; i < l; i++) {
+      key = oKeyArr.objectAtIndex(i);
+      const val = dictionary.valueForKey(key);
+
+      if (val === null) {
+        node[key] = null;
+        continue;
+      }
+      node[key] = getValueForClass(val);
+    }
+
+  } else {
+    node = getValueForClass(dictionary);
+  }
+
+  return node;
+}
+
+function getValueForClass(val) {
+  switch (getClass(val)) {
+    case "NSDictionary":
+    case "NSMutableDictionary":
+      return toJsObject(val);
+    case "Boolean":
+      return val;
+    case "Number":
+    case "NSDecimalNumber":
+      return Number(String(val));
+    case "Date":
+      return new Date(val);
+    default:
+      return String(val);
+  }
 }
 
 export function getDevicePushToken(): Promise<string> {
