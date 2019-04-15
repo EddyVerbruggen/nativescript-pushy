@@ -5,6 +5,8 @@ let notificationHandler: (notification: TNSPushNotification) => void;
 let pendingNotifications: Array<TNSPushNotification> = [];
 let latestDevicePushToken: string;
 let latestDevicePushTokenError: string;
+let getDevicePushTokenResolve: any;
+let getDevicePushTokenReject: any;
 let pushy;
 
 function getAppDelegate() {
@@ -30,9 +32,21 @@ const wireNotificationHandler = () => {
   // we need to do this here, otherwise a killed app will not receive the notification details upon tap
   pushy.register((error: NSError, deviceToken: string) => {
     if (error !== null) {
-      latestDevicePushTokenError = error.localizedDescription;
+      if (getDevicePushTokenReject) {
+        getDevicePushTokenReject(error.localizedDescription);
+        getDevicePushTokenReject = undefined;
+      } else {
+        latestDevicePushTokenError = error.localizedDescription;
+      }
+      latestDevicePushToken = undefined;
     } else {
-      latestDevicePushToken = deviceToken;
+      if (getDevicePushTokenResolve) {
+        getDevicePushTokenResolve(deviceToken);
+        getDevicePushTokenResolve = undefined;
+      } else {
+        latestDevicePushToken = deviceToken;
+      }
+      latestDevicePushTokenError = undefined;
     }
   });
 
@@ -63,10 +77,14 @@ if (UIApplication.sharedApplication) {
 
 export function getDevicePushToken(): Promise<string> {
   return new Promise<string>((resolve, reject) => {
-    if (latestDevicePushToken) {
+    if (latestDevicePushTokenError) {
+      reject(latestDevicePushTokenError);
+    } else if (latestDevicePushToken) {
       resolve(latestDevicePushToken);
     } else {
-      reject(latestDevicePushTokenError);
+      // keep the promise around, and resolve when we actually have the token
+      getDevicePushTokenResolve = resolve;
+      getDevicePushTokenReject = reject;
     }
   });
 }
