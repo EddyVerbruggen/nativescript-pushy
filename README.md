@@ -20,6 +20,11 @@
 tns plugin add nativescript-pushy
 ```
 
+For {N} 5 and below please use
+```bash
+tns plugin add nativescript-pushy@1.x
+```
+
 ## Demo app
 Check the source in the [demo](/demo) folder, or run it on your own device:
 

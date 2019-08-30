@@ -39,7 +39,7 @@ export function setNotificationHandler(handler: (notification: TNSPushNotificati
   processPendingNotifications();
 }
 
-function getActivity(): android.support.v7.app.AppCompatActivity {
+function getActivity() {
   return application.android.foregroundActivity || application.android.startActivity;
 }
 
@@ -47,7 +47,8 @@ function writeExternalStoragePermissionGranted(): boolean {
   let hasPermission = android.os.Build.VERSION.SDK_INT < 23; // Android M. (6.0)
   if (!hasPermission) {
     hasPermission = android.content.pm.PackageManager.PERMISSION_GRANTED ===
-        android.support.v4.content.ContextCompat.checkSelfPermission(utils.ad.getApplicationContext(), android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+    androidx.core.content.ContextCompat.checkSelfPermission(utils.ad.getApplicationContext(), android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
   }
   return hasPermission;
 }
@@ -65,10 +66,7 @@ function requestWriteExternalStoragePermission(): Promise<boolean> {
     application.android.on(application.AndroidApplication.activityRequestPermissionsEvent, onPermissionResultCallback);
 
     // invoke the permission dialog
-    android.support.v4.app.ActivityCompat.requestPermissions(
-        getActivity(),
-        [android.Manifest.permission.WRITE_EXTERNAL_STORAGE],
-        WRITE_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE);
+    androidx.core.app.ActivityCompat.requestPermissions(getActivity(), [android.Manifest.permission.WRITE_EXTERNAL_STORAGE], WRITE_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE);
   });
 }
 
@@ -116,21 +114,21 @@ class PushyPushReceiver extends android.content.BroadcastReceiver {
 
   showNotification(context: android.content.Context, notification: TNSPushNotification): void {
     // Prepare a notification with vibration, sound and lights
-    const builder = new android.support.v4.app.NotificationCompat.Builder(context)
-        .setAutoCancel(true)
-        .setSmallIcon(android.R.drawable.ic_dialog_info)
-        .setContentTitle(notification.title)
-        .setContentText(notification.message)
-        // .setLights(Color.RED, 1000, 1000)
-        // .setVibrate(new long[]{0, 400, 250, 400}) // note that this would require the 'VIBRATE' permission
-        // .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-        // this launches the app's main activity when the notification was tapped
-        .setContentIntent(
-            android.app.PendingIntent.getActivity(
-                context,
-                0,
-                new android.content.Intent(context, (<any>com).tns.NativeScriptActivity.class),
-                android.app.PendingIntent.FLAG_UPDATE_CURRENT));
+    const builder = new androidx.core.app.NotificationCompat.Builder(context)
+      .setAutoCancel(true)
+      .setSmallIcon(android.R.drawable.ic_dialog_info)
+      .setContentTitle(notification.title)
+      .setContentText(notification.message)
+      // .setLights(Color.RED, 1000, 1000)
+      // .setVibrate(new long[]{0, 400, 250, 400}) // note that this would require the 'VIBRATE' permission
+      // .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+      // this launches the app's main activity when the notification was tapped
+      .setContentIntent(
+          android.app.PendingIntent.getActivity(
+              context,
+              0,
+              new android.content.Intent(context, (<any>com).tns.NativeScriptActivity.class),
+              android.app.PendingIntent.FLAG_UPDATE_CURRENT));
 
     // Automatically configure a Notification Channel for devices running Android O+
     me.pushy.sdk.Pushy.setNotificationChannel(builder, context);
