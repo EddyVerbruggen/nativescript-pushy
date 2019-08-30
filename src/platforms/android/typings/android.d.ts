@@ -25,12 +25,15 @@ declare module me {
 				public static subscribe(param0: native.Array<string>, param1: globalAndroid.content.Context): void;
 				public static unsubscribe(param0: string, param1: globalAndroid.content.Context): void;
 				public static setAppId(param0: string, param1: globalAndroid.content.Context): void;
+				public static setEnterpriseCertificate(param0: string, param1: globalAndroid.content.Context): void;
 				public static setHeartbeatInterval(param0: number, param1: globalAndroid.content.Context): void;
 				public static setEnterpriseConfig(param0: string, param1: string, param2: globalAndroid.content.Context): void;
 				public static subscribe(param0: string, param1: globalAndroid.content.Context): void;
 				public static togglePermissionVerification(param0: boolean, param1: globalAndroid.content.Context): void;
 				public static setProxyEndpoint(param0: string, param1: globalAndroid.content.Context): void;
 				public static setJobServiceInterval(param0: number, param1: globalAndroid.content.Context): void;
+				public static isConnected(): boolean;
+				public static toggleExternalStoragePersistence(param0: boolean, param1: globalAndroid.content.Context): void;
 				public constructor();
 				public static listen(param0: globalAndroid.content.Context): void;
 				public static unsubscribe(param0: native.Array<string>, param1: globalAndroid.content.Context): void;
@@ -108,7 +111,6 @@ declare module me {
 			export module config {
 				export class PushyMQTT {
 					public static class: java.lang.Class<me.pushy.sdk.config.PushyMQTT>;
-					public static PORT: number;
 					public static ENDPOINT: string;
 					public static DIRECT_ENDPOINT: string;
 					public static INITIAL_RETRY_INTERVAL: number;
@@ -176,6 +178,8 @@ declare module me {
 					public static ENTERPRISE_API_ENDPOINT: string;
 					public static ENTERPRISE_MQTT_ENDPOINT: string;
 					public static PROXY_ENDPOINT: string;
+					public static EXTERNAL_STORAGE_PERSISTENCE: string;
+					public static ENTERPRISE_CERTIFICATE: string;
 					public static ENTERPRISE_KEY_SUFFIX: string;
 					public constructor();
 				}
@@ -205,6 +209,7 @@ declare module me {
 			export module config {
 				export class PushyStorage {
 					public static class: java.lang.Class<me.pushy.sdk.config.PushyStorage>;
+					public static EXTERNAL_STORAGE_APP_ID_FILE: string;
 					public static EXTERNAL_STORAGE_TOKEN_FILE: string;
 					public static EXTERNAL_STORAGE_AUTH_KEY_FILE: string;
 					public static EXTERNAL_STORAGE_FILE_ENTERPRISE_PREFIX: string;
@@ -27634,47 +27639,27 @@ declare module me {
 	export module pushy {
 		export module sdk {
 			export module model {
+				export class PushyBroadcastReceiver {
+					public static class: java.lang.Class<me.pushy.sdk.model.PushyBroadcastReceiver>;
+					public getReceiver(): globalAndroid.content.BroadcastReceiver;
+					public constructor(param0: globalAndroid.content.BroadcastReceiver, param1: java.lang.reflect.Method);
+					public execute(param0: globalAndroid.content.Context, param1: globalAndroid.content.Intent): void;
+				}
+			}
+		}
+	}
+}
+
+declare module me {
+	export module pushy {
+		export module sdk {
+			export module model {
 				export class PushyDeviceCredentials {
 					public static class: java.lang.Class<me.pushy.sdk.model.PushyDeviceCredentials>;
 					public token: string;
 					public authKey: string;
 					public constructor(param0: string, param1: string);
 					public constructor();
-				}
-			}
-		}
-	}
-}
-
-declare module me {
-	export module pushy {
-		export module sdk {
-			export module model {
-				export module api {
-					export class PushyAuthMigrationRequest {
-						public static class: java.lang.Class<me.pushy.sdk.model.api.PushyAuthMigrationRequest>;
-						public app: string;
-						public token: string;
-						public constructor(param0: string, param1: string);
-					}
-				}
-			}
-		}
-	}
-}
-
-declare module me {
-	export module pushy {
-		export module sdk {
-			export module model {
-				export module api {
-					export class PushyAuthMigrationResponse {
-						public static class: java.lang.Class<me.pushy.sdk.model.api.PushyAuthMigrationResponse>;
-						public auth: string;
-						public error: string;
-						public code: number;
-						public constructor();
-					}
 				}
 			}
 		}
@@ -27836,6 +27821,7 @@ declare module me {
 			export module services {
 				export class PushyJobService {
 					public static class: java.lang.Class<me.pushy.sdk.services.PushyJobService>;
+					public static isConnected(): boolean;
 					public onStopJob(param0: any): boolean;
 					public constructor();
 					public onStartJob(param0: any): boolean;
@@ -27875,6 +27861,7 @@ declare module me {
 					public cancelReconnect(): void;
 					public onCreate(): void;
 					public onBind(param0: globalAndroid.content.Intent): globalAndroid.os.IBinder;
+					public static isConnected(): boolean;
 					public constructor();
 					public onStartCommand(param0: globalAndroid.content.Intent, param1: number, param2: number): number;
 					public scheduleReconnect(): void;
@@ -27964,8 +27951,38 @@ declare module me {
 					public static validateCredentials(param0: me.pushy.sdk.model.PushyDeviceCredentials, param1: globalAndroid.content.Context): boolean;
 					public constructor();
 					public static getDeviceCredentials(param0: globalAndroid.content.Context): me.pushy.sdk.model.PushyDeviceCredentials;
-					public static obtainDeviceAuthKey(param0: string, param1: globalAndroid.content.Context): string;
 					public static clearDeviceCredentials(param0: globalAndroid.content.Context): void;
+				}
+			}
+		}
+	}
+}
+
+declare module me {
+	export module pushy {
+		export module sdk {
+			export module util {
+				export class PushyBroadcastManager {
+					public static class: java.lang.Class<me.pushy.sdk.util.PushyBroadcastManager>;
+					public constructor();
+					public static sendBroadcast(param0: globalAndroid.content.Context, param1: globalAndroid.content.Intent): void;
+				}
+			}
+		}
+	}
+}
+
+declare module me {
+	export module pushy {
+		export module sdk {
+			export module util {
+				export class PushyCertificateManager {
+					public static class: java.lang.Class<me.pushy.sdk.util.PushyCertificateManager>;
+					public static mSocketFactory: javax.net.SocketFactory;
+					public constructor();
+					public static getEnterpriseCertificateName(param0: globalAndroid.content.Context): string;
+					public static isConfigured(param0: globalAndroid.content.Context): boolean;
+					public static getEnterpriseSslSocketFactory(param0: globalAndroid.content.Context): javax.net.SocketFactory;
 				}
 			}
 		}
@@ -28007,9 +28024,9 @@ declare module me {
 			export module util {
 				export class PushyHTTP {
 					public static class: java.lang.Class<me.pushy.sdk.util.PushyHTTP>;
-					public static get(param0: string): string;
 					public constructor();
-					public static post(param0: string, param1: string): string;
+					public static get(param0: string, param1: globalAndroid.content.Context): string;
+					public static post(param0: string, param1: string, param2: globalAndroid.content.Context): string;
 				}
 			}
 		}
@@ -28023,10 +28040,10 @@ declare module me {
 				export class PushyIO {
 					public static class: java.lang.Class<me.pushy.sdk.util.PushyIO>;
 					public static fileExists(param0: string): boolean;
-					public static writeToFile(param0: string, param1: string): void;
 					public constructor();
 					public static deleteFile(param0: string): void;
-					public static readFromFile(param0: string): string;
+					public static writeToFile(param0: string, param1: string, param2: globalAndroid.content.Context): void;
+					public static readFromFile(param0: string, param1: globalAndroid.content.Context): string;
 				}
 			}
 		}
@@ -28073,7 +28090,7 @@ declare module me {
 				export class PushyMqttConnection extends me.pushy.sdk.lib.paho.MqttCallback {
 					public static class: java.lang.Class<me.pushy.sdk.util.PushyMqttConnection>;
 					public releaseWifiLock(): void;
-					public disconnectExistingClient(): void;
+					public disconnectExistingClient(param0: boolean): void;
 					public connectionLost(param0: java.lang.Throwable): void;
 					public messageArrived(param0: string, param1: me.pushy.sdk.lib.paho.MqttMessage): void;
 					public getNetwork(): number;

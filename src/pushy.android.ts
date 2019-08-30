@@ -3,6 +3,8 @@ import { AndroidActivityRequestPermissionsEventData } from "tns-core-modules/app
 import * as utils from "tns-core-modules/utils/utils";
 import { TNSPushNotification } from "./";
 
+declare const androidx, com: any;
+
 const WRITE_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE = 3446; // something completely random
 
 let notificationHandler: (notification: TNSPushNotification) => void;
@@ -46,9 +48,7 @@ function getActivity() {
 function writeExternalStoragePermissionGranted(): boolean {
   let hasPermission = android.os.Build.VERSION.SDK_INT < 23; // Android M. (6.0)
   if (!hasPermission) {
-    hasPermission = android.content.pm.PackageManager.PERMISSION_GRANTED ===
-    androidx.core.content.ContextCompat.checkSelfPermission(utils.ad.getApplicationContext(), android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
-
+    hasPermission = android.content.pm.PackageManager.PERMISSION_GRANTED === androidx.core.content.ContextCompat.checkSelfPermission(utils.ad.getApplicationContext(), android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
   }
   return hasPermission;
 }
@@ -127,7 +127,7 @@ class PushyPushReceiver extends android.content.BroadcastReceiver {
           android.app.PendingIntent.getActivity(
               context,
               0,
-              new android.content.Intent(context, (<any>com).tns.NativeScriptActivity.class),
+              new android.content.Intent(context, com.tns.NativeScriptActivity.class),
               android.app.PendingIntent.FLAG_UPDATE_CURRENT));
 
     // Automatically configure a Notification Channel for devices running Android O+
