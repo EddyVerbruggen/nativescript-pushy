@@ -30,6 +30,8 @@
     ]
   },
   "exclude": [
+    "demo",
+    "scripts",
     "node_modules"
   ],
   "compileOnSave": false

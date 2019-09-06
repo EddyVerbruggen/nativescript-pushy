@@ -66,4 +66,4 @@ setNotificationHandler(notification => {
 
 ## Please note..
 
-> ⚠️ Do not test on a the iOS simulator as it can't receive the token not actual push notifications.
+> ⚠️ Do not test on a the iOS simulator as it can't receive push notifications.
