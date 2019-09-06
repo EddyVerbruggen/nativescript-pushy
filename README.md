@@ -64,6 +64,13 @@ setNotificationHandler(notification => {
 });
 ```
 
+One of the properties of the returned `notification` object is `foreground`, which indicates whether or not
+the notification was received while the app was in either the foreground or background.
+
+Another useful property may be `appLaunchedByNotification`, which indicates whether or not the app was launched
+by tapping the notification (as opposed to the app's icon). When this property is `true` you may want to fi.
+navigate to a different route in your app.
+
 ## Please note..
 
 > ⚠️ Do not test on a the iOS simulator as it can't receive push notifications.
