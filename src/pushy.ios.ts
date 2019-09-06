@@ -126,14 +126,13 @@ if (UIApplication.sharedApplication) {
 
 let _userNotificationCenterDelegate;
 if (parseInt(device.osVersion) >= 10) {
-  // adding a little delay to give other code time to wire the delegate so we can play nice.. also doesn't affect usage as we only need it for foreground scenarios
+  // adding a little delay to give other code time to wire the delegate
   setTimeout(() => {
     if (UNUserNotificationCenter.currentNotificationCenter().delegate) {
-      console.log("The Pushy plugin won't override the notification handler because it was already set. This means it's uncertain whether or not foreground notifications will be shown.");
-    } else {
-      _userNotificationCenterDelegate = UNUserNotificationCenterDelegateImpl.new().initDelegate();
-      UNUserNotificationCenter.currentNotificationCenter().delegate = _userNotificationCenterDelegate;
+      console.log("BEWARE: The Pushy plugin replace an already existing notification delegate. This means other (local) notification plugins may no longer work correctly!");
     }
+    _userNotificationCenterDelegate = UNUserNotificationCenterDelegateImpl.new().initDelegate();
+    UNUserNotificationCenter.currentNotificationCenter().delegate = _userNotificationCenterDelegate;
   }, 100);
 }
 

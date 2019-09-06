@@ -1,6 +1,6 @@
+import { LocalNotifications } from "nativescript-local-notifications";
 import { getDevicePushToken, setNotificationHandler } from "nativescript-pushy";
 import { Observable } from "tns-core-modules/data/observable";
-import { alert } from "tns-core-modules/ui/dialogs";
 
 export class HelloWorldModel extends Observable {
   public message: string;
@@ -19,6 +19,15 @@ export class HelloWorldModel extends Observable {
         });
       }, 500);
     });
+  }
+
+  public doScheduleLocalNotification(): void {
+    LocalNotifications.schedule([{
+      id: 1,
+      title: "Local FTW",
+      body: "I'm a local notification",
+      at: new Date(new Date().getTime() + (10 * 1000)) // 10 seconds from now
+    }]).then(() => console.log("Will show a local notification in 10 seconds"));
   }
 
   public doGetDevicePushToken(): void {

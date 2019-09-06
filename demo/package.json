@@ -9,9 +9,10 @@
     }
   },
   "dependencies": {
+    "nativescript-local-notifications": "~4.0.1",
+    "nativescript-pushy": "file:../src",
     "nativescript-theme-core": "^1.0.4",
     "nativescript-unit-test-runner": "0.7.0",
-    "nativescript-pushy": "file:../src",
     "tns-core-modules": "~6.1.0"
   },
   "devDependencies": {
