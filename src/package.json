@@ -1,6 +1,6 @@
 {
   "name": "nativescript-pushy",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Lightning-fast, highly-reliable push notification delivery with https://pushy.me",
   "main": "pushy",
   "typings": "index.d.ts",

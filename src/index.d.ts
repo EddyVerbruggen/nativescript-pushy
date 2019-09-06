@@ -1,6 +1,8 @@
 export interface TNSPushNotification {
   title: string;
   message?: string;
+  foreground: boolean;
+  appLaunchedByNotification: boolean;
   aps?: {
     alert: string;
     badge: number;

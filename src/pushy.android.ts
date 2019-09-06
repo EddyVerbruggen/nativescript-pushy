@@ -1,5 +1,6 @@
+import { ApplicationEventData } from "tns-core-modules/application";
 import * as application from "tns-core-modules/application";
-import { AndroidActivityRequestPermissionsEventData } from "tns-core-modules/application";
+import { AndroidActivityRequestPermissionsEventData, LaunchEventData } from "tns-core-modules/application";
 import * as utils from "tns-core-modules/utils/utils";
 import { TNSPushNotification } from "./";
 
@@ -9,6 +10,10 @@ const WRITE_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE = 3446; // something comple
 
 let notificationHandler: (notification: TNSPushNotification) => void;
 let pendingNotifications: Array<TNSPushNotification> = [];
+let appInForeground = false;
+
+application.on(application.resumeEvent, (args: ApplicationEventData) => appInForeground = true);
+application.on(application.suspendEvent, () => appInForeground = false);
 
 export function getDevicePushToken(): Promise<string> {
   return new Promise<string>((resolve, reject) => {
@@ -22,7 +27,7 @@ export function getDevicePushToken(): Promise<string> {
       android.os.StrictMode.setThreadPolicy(policy);
 
       // Note that this is a blocking call, so not ideal to do this on the main thread
-      const deviceToken = me.pushy.sdk.Pushy.register(getActivity());
+      const deviceToken = me.pushy.sdk.Pushy.register(utils.ad.getApplicationContext());
       resolve(deviceToken);
     };
 
@@ -38,6 +43,14 @@ export function getDevicePushToken(): Promise<string> {
 
 export function setNotificationHandler(handler: (notification: TNSPushNotification) => void): void {
   notificationHandler = handler;
+  const extras = getActivity().getIntent().getExtras();
+  if (extras && extras.getBoolean("push_tapped")) {
+    const notification = transformNativeNotificationIntoTNSPushNotification(extras);
+    if (notification) {
+      notification.foreground = true;
+      pendingNotifications.push(notification);
+    }
+  }
   processPendingNotifications();
 }
 
@@ -78,57 +91,73 @@ const processPendingNotifications = (): void => {
   }
 };
 
-@JavaProxy("com.tns.plugin.puhsy.PushyPushReceiver")
+const transformNativeNotificationIntoTNSPushNotification = (extras?: android.os.Bundle): TNSPushNotification => {
+  if (!extras) {
+    return null;
+  }
+
+  const notification = <TNSPushNotification>{};
+
+  notification.title = extras.getString("title");
+  notification.message = extras.getString("message");
+  notification.appLaunchedByNotification = extras.getBoolean("push_tapped");
+  notification.android = extras;
+  notification.data = {};
+
+  const iterator = extras.keySet().iterator();
+  while (iterator.hasNext()) {
+    const key = iterator.next();
+    if (key !== "from" && key !== "collapse_key" && key !== "push_tapped") {
+      notification.data[key] = extras.get(key);
+    }
+  }
+  return notification;
+};
+
+@JavaProxy("com.tns.plugin.pushy.PushyPushReceiver")
 class PushyPushReceiver extends android.content.BroadcastReceiver {
 
   onReceive(context: android.content.Context, intent: android.content.Intent) {
     try {
-      const notification = <TNSPushNotification>{};
-      if (intent.getExtras() == null) {
-        return;
-      }
-
-      const extras = intent.getExtras();
-
-      notification.title = intent.getStringExtra("title");
-      notification.message = intent.getStringExtra("message");
-      notification.android = extras;
-      notification.data = {};
-
-      const iterator = extras.keySet().iterator();
-      while (iterator.hasNext()) {
-        const key = iterator.next();
-        if (key !== "from" && key !== "collapse_key") {
-          notification.data[key] = extras.get(key);
+      const notification = transformNativeNotificationIntoTNSPushNotification(intent.getExtras());
+      notification.foreground = appInForeground;
+      // TODO only when notification was tapped..
+      if (notification) {
+        if (appInForeground) {
+          pendingNotifications.push(notification);
+          processPendingNotifications();
         }
+        this.showNotification(context, intent.getExtras(), notification);
       }
-
-      pendingNotifications.push(notification);
-      processPendingNotifications();
-
-      this.showNotification(context, notification);
     } catch (e) {
       console.log("Failed to receive Push: " + e);
     }
   }
 
-  showNotification(context: android.content.Context, notification: TNSPushNotification): void {
+  showNotification(context: android.content.Context, extras: android.os.Bundle, notification: TNSPushNotification): void {
+    const launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getApplicationContext().getPackageName());
+    launchIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP | android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+    // make the notification data available to the launch intent
+    launchIntent.putExtras(extras);
+    launchIntent.putExtra("push_tapped", true);
+
     // Prepare a notification with vibration, sound and lights
     const builder = new androidx.core.app.NotificationCompat.Builder(context)
-      .setAutoCancel(true)
-      .setSmallIcon(android.R.drawable.ic_dialog_info)
-      .setContentTitle(notification.title)
-      .setContentText(notification.message)
-      // .setLights(Color.RED, 1000, 1000)
-      // .setVibrate(new long[]{0, 400, 250, 400}) // note that this would require the 'VIBRATE' permission
-      // .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
-      // this launches the app's main activity when the notification was tapped
-      .setContentIntent(
-          android.app.PendingIntent.getActivity(
-              context,
-              0,
-              new android.content.Intent(context, com.tns.NativeScriptActivity.class),
-              android.app.PendingIntent.FLAG_UPDATE_CURRENT));
+        .setAutoCancel(true)
+        .setSmallIcon(android.R.drawable.ic_dialog_info)
+        .setContentTitle(notification.title)
+        .setContentText(notification.message)
+        // .setLights(Color.RED, 1000, 1000)
+        // .setVibrate(new long[]{0, 400, 250, 400}) // note that this would require the 'VIBRATE' permission
+        // .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+        // this launches the app's main activity when the notification was tapped
+        .setContentIntent(
+            android.app.PendingIntent.getActivity(
+                context,
+                0,
+                launchIntent,
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT));
 
     // Automatically configure a Notification Channel for devices running Android O+
     me.pushy.sdk.Pushy.setNotificationChannel(builder, context);

@@ -1,4 +1,5 @@
 import * as application from "tns-core-modules/application/application";
+import { device } from "tns-core-modules/platform";
 import { getClass } from "tns-core-modules/utils/types";
 import { TNSPushNotification } from "./";
 
@@ -9,6 +10,66 @@ let latestDevicePushTokenError: string;
 let getDevicePushTokenResolve: any;
 let getDevicePushTokenReject: any;
 let pushy;
+
+function transformNotification(data: NSDictionary<any, any>): TNSPushNotification {
+  const d = toJsObject(data);
+
+  const notification = <TNSPushNotification>{
+    title: d.title,
+    message: d.message,
+    foreground: UIApplication.sharedApplication.applicationState === UIApplicationState.Active,
+    ios: data,
+    data: {}
+  };
+
+  if (d.aps) {
+    notification.aps = {
+      alert: d.aps.alert,
+      badge: d.aps.badge,
+      sound: d.aps.sound
+    };
+  }
+
+  Object.keys(d).forEach(key => {
+    if (key !== "aps" && key !== "title" && key !== "message") {
+      notification.data[key] = d[key];
+    }
+  });
+
+  return notification;
+}
+
+class UNUserNotificationCenterDelegateImpl extends NSObject implements UNUserNotificationCenterDelegate {
+  public static ObjCProtocols = [];
+
+  static new(): UNUserNotificationCenterDelegateImpl {
+    if (UNUserNotificationCenterDelegateImpl.ObjCProtocols.length === 0 && typeof (UNUserNotificationCenterDelegate) !== "undefined") {
+      UNUserNotificationCenterDelegateImpl.ObjCProtocols.push(UNUserNotificationCenterDelegate);
+    }
+    return <UNUserNotificationCenterDelegateImpl>super.new();
+  }
+
+  public initDelegate(): UNUserNotificationCenterDelegateImpl {
+    return this;
+  }
+
+  public userNotificationCenterWillPresentNotificationWithCompletionHandler(center: UNUserNotificationCenter, notification: UNNotification, completionHandler: (p1: UNNotificationPresentationOptions) => void): void {
+    const shownNotification = transformNotification(notification.request.content.userInfo);
+    pendingNotifications.push(shownNotification);
+    processPendingNotifications();
+    completionHandler(UNNotificationPresentationOptions.Alert | UNNotificationPresentationOptions.Sound | UNNotificationPresentationOptions.Badge);
+  }
+
+  public userNotificationCenterDidReceiveNotificationResponseWithCompletionHandler(center: UNUserNotificationCenter, response: UNNotificationResponse, completionHandler: () => void): void {
+    const notification = transformNotification(response.notification.request.content.userInfo);
+    notification.appLaunchedByNotification = true;
+    pendingNotifications.push(notification);
+    processPendingNotifications();
+    setTimeout(() => {
+      completionHandler();
+    }, 10);
+  }
+}
 
 function getAppDelegate() {
   // Play nice with other plugins by not completely ignoring anything already added to the appdelegate
@@ -50,30 +111,8 @@ const wireNotificationHandler = () => {
   });
 
   pushy.setNotificationHandler((data: NSDictionary<any, any>, completionHandler: (backgroundFetchResult: UIBackgroundFetchResult) => void) => {
-    const d = toJsObject(data);
-
-    const notification = <TNSPushNotification>{
-      title: d.title,
-      message: d.message,
-      ios: data,
-      data: {}
-    };
-
-    if (d.aps) {
-      notification.aps = {
-        alert: d.aps.alert,
-        badge: d.aps.badge,
-        sound: d.aps.sound
-      };
-    }
-
-    Object.keys(d).forEach(key => {
-      if (key !== "aps" && key !== "title" && key !== "message") {
-        notification.data[key] = d[key];
-      }
-    });
-
-    pendingNotifications.push(notification);
+    console.log("----- 1");
+    pendingNotifications.push(transformNotification(data));
     processPendingNotifications();
     completionHandler(UIBackgroundFetchResult.NewData);
   });
@@ -83,6 +122,19 @@ if (UIApplication.sharedApplication) {
   wireNotificationHandler();
 } else {
   application.on("launch", () => wireNotificationHandler());
+}
+
+let _userNotificationCenterDelegate;
+if (parseInt(device.osVersion) >= 10) {
+  // adding a little delay to give other code time to wire the delegate so we can play nice.. also doesn't affect usage as we only need it for foreground scenarios
+  setTimeout(() => {
+    if (UNUserNotificationCenter.currentNotificationCenter().delegate) {
+      console.log("The Pushy plugin won't override the notification handler because it was already set. This means it's uncertain whether or not foreground notifications will be shown.");
+    } else {
+      _userNotificationCenterDelegate = UNUserNotificationCenterDelegateImpl.new().initDelegate();
+      UNUserNotificationCenter.currentNotificationCenter().delegate = _userNotificationCenterDelegate;
+    }
+  }, 100);
 }
 
 function toJsObject(dictionary: NSDictionary<any, any>) {
@@ -146,9 +198,6 @@ export function getDevicePushToken(): Promise<string> {
 
 export function setNotificationHandler(handler: (notification: TNSPushNotification) => void): void {
   notificationHandler = handler;
-  while (pendingNotifications.length > 0) {
-    notificationHandler(pendingNotifications.pop());
-  }
   processPendingNotifications();
 }
 
