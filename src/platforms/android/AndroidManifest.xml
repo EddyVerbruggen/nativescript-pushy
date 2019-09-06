@@ -13,7 +13,7 @@
 
         <!-- Pushy Notification Receiver - invoked by incoming notifications -->
 <!--        <receiver android:name="me.pushy.sdk.receivers.PushyPushReceiver" android:exported="false">-->
-        <receiver android:name="com.tns.plugin.puhsy.PushyPushReceiver" android:exported="false">
+        <receiver android:name="com.tns.plugin.pushy.PushyPushReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="pushy.me"/>
             </intent-filter>
