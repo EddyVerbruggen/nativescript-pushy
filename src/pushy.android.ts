@@ -11,6 +11,7 @@ const WRITE_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE = 3446; // something comple
 let notificationHandler: (notification: TNSPushNotification) => void;
 let pendingNotifications: Array<TNSPushNotification> = [];
 let appInForeground = false;
+let showForegroundNotifications = true;
 
 application.on(application.resumeEvent, (args: ApplicationEventData) => appInForeground = true);
 application.on(application.suspendEvent, () => appInForeground = false);
@@ -127,7 +128,11 @@ class PushyPushReceiver extends android.content.BroadcastReceiver {
           pendingNotifications.push(notification);
           processPendingNotifications();
         }
-        this.showNotification(context, intent.getExtras(), notification);
+        console.log("TCL: PushyPushReceiver -> onReceive -> showForegroundNotifications", showForegroundNotifications);
+        if (!appInForeground || showForegroundNotifications) {
+          this.showNotification(context, intent.getExtras(), notification);
+        }
+        
       }
     } catch (e) {
       console.log("Failed to receive Push: " + e);
@@ -169,4 +174,9 @@ class PushyPushReceiver extends android.content.BroadcastReceiver {
     const notID = Math.floor((Math.random() * 1000) + 1);
     notificationManager.notify(notID, builder.build());
   }
+}
+
+export function showNotificationWhenAppInForeground(show: boolean): void {
+  showForegroundNotifications = show;
+  console.log("TCL: showForegroundNotifications", showForegroundNotifications);
 }

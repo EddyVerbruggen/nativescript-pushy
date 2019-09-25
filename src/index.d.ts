@@ -22,3 +22,5 @@ export interface TNSPushNotification {
 export declare function getDevicePushToken(): Promise<string>;
 
 export declare function setNotificationHandler(handler: (notification: TNSPushNotification) => void): void;
+
+export declare function showNotificationWhenAppInForeground(show: boolean): void;
