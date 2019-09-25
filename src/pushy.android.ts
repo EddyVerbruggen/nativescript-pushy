@@ -128,7 +128,6 @@ class PushyPushReceiver extends android.content.BroadcastReceiver {
           pendingNotifications.push(notification);
           processPendingNotifications();
         }
-        console.log("TCL: PushyPushReceiver -> onReceive -> showForegroundNotifications", showForegroundNotifications);
         if (!appInForeground || showForegroundNotifications) {
           this.showNotification(context, intent.getExtras(), notification);
         }
