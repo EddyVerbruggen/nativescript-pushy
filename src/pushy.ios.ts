@@ -111,7 +111,6 @@ const wireNotificationHandler = () => {
   });
 
   pushy.setNotificationHandler((data: NSDictionary<any, any>, completionHandler: (backgroundFetchResult: UIBackgroundFetchResult) => void) => {
-    console.log("----- 1");
     pendingNotifications.push(transformNotification(data));
     processPendingNotifications();
     completionHandler(UIBackgroundFetchResult.NewData);
@@ -129,7 +128,7 @@ if (parseInt(device.osVersion) >= 10) {
   // adding a little delay to give other code time to wire the delegate
   setTimeout(() => {
     if (UNUserNotificationCenter.currentNotificationCenter().delegate) {
-      console.log("BEWARE: The Pushy plugin replace an already existing notification delegate. This means other (local) notification plugins may no longer work correctly!");
+      console.log("BEWARE: The Pushy plugin replaced an already existing notification delegate. This means other (local) notification plugins may no longer work correctly!");
     }
     _userNotificationCenterDelegate = UNUserNotificationCenterDelegateImpl.new().initDelegate();
     UNUserNotificationCenter.currentNotificationCenter().delegate = _userNotificationCenterDelegate;
