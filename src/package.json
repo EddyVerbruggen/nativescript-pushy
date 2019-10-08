@@ -1,6 +1,6 @@
 {
   "name": "nativescript-pushy",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Lightning-fast, highly-reliable push notification delivery with https://pushy.me",
   "main": "pushy",
   "typings": "index.d.ts",
@@ -43,6 +43,12 @@
     "name": "Eddy Verbruggen",
     "email": "eddyverbruggen@gmail.com"
   },
+  "contributors": [
+    {
+      "name": "Marko Heyns",
+      "email": "marko.h@imake.pro"
+    }
+  ],
   "bugs": {
     "url": "https://github.com/EddyVerbruggen/nativescript-pushy/issues"
   },

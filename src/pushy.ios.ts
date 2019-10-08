@@ -10,6 +10,7 @@ let latestDevicePushTokenError: string;
 let getDevicePushTokenResolve: any;
 let getDevicePushTokenReject: any;
 let pushy;
+let showForegroundNotifications = true;
 
 function transformNotification(data: NSDictionary<any, any>): TNSPushNotification {
   const d = toJsObject(data);
@@ -57,7 +58,11 @@ class UNUserNotificationCenterDelegateImpl extends NSObject implements UNUserNot
     const shownNotification = transformNotification(notification.request.content.userInfo);
     pendingNotifications.push(shownNotification);
     processPendingNotifications();
-    completionHandler(UNNotificationPresentationOptions.Alert | UNNotificationPresentationOptions.Sound | UNNotificationPresentationOptions.Badge);
+    if (showForegroundNotifications) {
+      completionHandler(UNNotificationPresentationOptions.Alert | UNNotificationPresentationOptions.Sound | UNNotificationPresentationOptions.Badge);
+    } else {
+      completionHandler(0);
+    }
   }
 
   public userNotificationCenterDidReceiveNotificationResponseWithCompletionHandler(center: UNUserNotificationCenter, response: UNNotificationResponse, completionHandler: () => void): void {
@@ -206,3 +211,7 @@ const processPendingNotifications = (): void => {
     }
   }
 };
+
+export function showNotificationWhenAppInForeground(show: boolean): void {
+  showForegroundNotifications = show;
+}
